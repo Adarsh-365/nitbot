@@ -6,3 +6,6 @@ langchain_community
 PyPDF2
 langchain_core
 langchain_groq
+whitenoise
+langchain_huggingface
+sentence-transformers
