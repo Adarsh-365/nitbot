@@ -4,10 +4,15 @@ import dotenv
 import os
 dotenv.load_dotenv()
 from langchain_core.prompts import PromptTemplate
+
 api_key = os.environ.get("GROQ_API_KEY")
-from langchain_huggingface import HuggingFaceEmbeddings
+# from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains.combine_documents.stuff import create_stuff_documents_chain
-embeddings = HuggingFaceEmbeddings(
+HF_API_TOKEN = os.environ.get("HF_API_TOKEN") 
+from .EMB import HuggingFaceInferenceAPIEmbeddings
+
+embeddings = HuggingFaceInferenceAPIEmbeddings(
+    api_key=HF_API_TOKEN,
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
