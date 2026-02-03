@@ -1,4 +1,4 @@
-Django==5.2.3
+Django==5.2.11
 docx==0.2.4
 dotenv==0.9.9
 langchain
