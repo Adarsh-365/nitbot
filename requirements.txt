@@ -1,11 +1,6 @@
-Django==5.2.3
-docx==0.2.4
-dotenv==0.9.9
-langchain
-langchain_community
-PyPDF2
-langchain_core
-langchain_groq
-whitenoise
-langchain_huggingface
+Flask==3.1.1
 faiss-cpu
+numpy
+openai
+PyPDF2
+python-dotenv

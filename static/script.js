@@ -1,216 +1,255 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const chatWindow = document.getElementById('chat-window');
-    const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-button');
-    const botAvatar = "/static/data/bot.png"; // Use direct static path
-    const userAvatar = "/static/data/user.png"; // Use direct static path
+document.addEventListener("DOMContentLoaded", () => {
+    const chatWindow = document.getElementById("chat-window");
+    const chatStage = document.querySelector(".chat-stage");
+    const messageInput = document.getElementById("message-input");
+    const sendButton = document.getElementById("send-button");
+    const composerWrap = document.querySelector(".composer-wrap");
+    const composerSpacer = document.getElementById("composer-spacer");
 
-    // Function to add a message to the chat window
-    function addMessage(sender, text, avatarUrl) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+    let shouldStickToBottom = true;
 
-        const avatarImg = document.createElement('img');
-        avatarImg.src = avatarUrl;
-        avatarImg.alt = sender + " avatar";
-        avatarImg.classList.add('avatar');
-
-        const messageContentDiv = document.createElement('div');
-        messageContentDiv.classList.add('message-content');
-        const paragraph = document.createElement('p');
-        paragraph.textContent = text; // Use textContent for security
-        messageContentDiv.appendChild(paragraph);
-
-        if (sender === 'user') {
-            messageDiv.appendChild(messageContentDiv); // Content first for user
-            messageDiv.appendChild(avatarImg);
-        } else {
-            messageDiv.appendChild(avatarImg); // Avatar first for bot
-            messageDiv.appendChild(messageContentDiv);
-            // Removed scrollToBottom();
+    function syncComposerOffset() {
+        if (!chatStage || !composerWrap || !composerSpacer) {
+            return;
         }
-        chatWindow.appendChild(messageDiv);
-        scrollToBottom(); // Always scroll to bottom after adding a message
+        const composerHeight = Math.ceil(composerWrap.getBoundingClientRect().height);
+        const bottomOffset = composerHeight + 16;
+        chatStage.style.paddingBottom = `${bottomOffset}px`;
+        composerSpacer.style.bottom = `${bottomOffset}px`;
     }
 
-    // Function to show typing indicator
-    function showTypingIndicator() {
-        const typingDiv = document.createElement('div');
-        typingDiv.classList.add('message', 'bot-message', 'typing-indicator-container'); // Use bot-message for alignment
-        typingDiv.id = 'typing-indicator'; // For easy removal
-
-        const avatarImg = document.createElement('img');
-        avatarImg.src = botAvatar;
-        avatarImg.alt = "Bot avatar";
-        avatarImg.classList.add('avatar');
-        const indicatorContent = document.createElement('div');
-        indicatorContent.classList.add('message-content'); // To match styling
-        indicatorContent.style.backgroundColor = 'transparent'; // No bubble for indicator itself
-        const typingDots = document.createElement('div');
-        typingDots.classList.add('typing-indicator');
-        typingDots.innerHTML = '<span></span><span></span><span></span>';
-        indicatorContent.appendChild(typingDots);
-        typingDiv.appendChild(avatarImg);
-        typingDiv.appendChild(indicatorContent);
-        chatWindow.appendChild(typingDiv);
-        // Removed scrollToBottom();
-    }
-
-    // Function to hide typing indicator
-    function hideTypingIndicator() {
-        const typingIndicator = document.getElementById('typing-indicator');
-        if (typingIndicator) {
-            typingIndicator.remove();
-        }
-    }
-
-    // Function to simulate bot response
-    function getBotResponse(userMessage) {
-        showTypingIndicator();
-
-        setTimeout(() => {
-            hideTypingIndicator();
-            
-            let botText = "I received: " + userMessage;
-            if (userMessage.toLowerCase().includes("hello") || userMessage.toLowerCase().includes("hi")) {
-                botText = "Hello there! How can I assist you?";
-            } else if (userMessage.toLowerCase().includes("how are you")) {
-                botText = "I'm just a bunch of code, but I'm doing great! Thanks for asking.";
-            } else if (userMessage.toLowerCase().includes("bye")) {
-                botText = "Goodbye! Have a great day!";
-            } else if (userMessage.toLowerCase().includes("name")) {
-                botText = "I am a Simple Chatbot. You can call me Sim.";
-            }
-            addMessage('bot', botText, botAvatar);
-            // Removed scrollToBottom();
-        }, Math.random() * 1500 + 500); // Simulate network delay
-    }
-
-    // Function to scroll to the bottom of the chat window
     function scrollToBottom() {
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        if (!chatStage) {
+            return;
+        }
+        chatStage.scrollTop = chatStage.scrollHeight;
+        shouldStickToBottom = true;
     }
 
-    // Auto-resize textarea
-    messageInput.addEventListener('input', () => {
-        messageInput.style.height = 'auto'; // Reset height
-        messageInput.style.height = (messageInput.scrollHeight) + 'px'; // Set to scroll height
-         // Prevent excessive growth
-        if (messageInput.scrollHeight > 100) {
-            messageInput.style.overflowY = 'auto';
-        } else {
-            messageInput.style.overflowY = 'hidden';
+    function handleChatScroll() {
+        if (!chatStage) {
+            return;
         }
-    });
-    
-    // Function to add a bot message with typing effect
-    async function addBotMessageTyping(text, avatarUrl) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'bot-message');
+        const distanceFromBottom =
+            chatStage.scrollHeight - chatStage.scrollTop - chatStage.clientHeight;
+        shouldStickToBottom = distanceFromBottom < 80;
+    }
 
-        const avatarImg = document.createElement('img');
-        avatarImg.src = avatarUrl;
-        avatarImg.alt = 'bot avatar';
-        avatarImg.classList.add('avatar');
-
-        const messageContentDiv = document.createElement('div');
-        messageContentDiv.classList.add('message-content');
-        const paragraph = document.createElement('p');
-        messageContentDiv.appendChild(paragraph);
-
-        messageDiv.appendChild(avatarImg);
-        messageDiv.appendChild(messageContentDiv);
-        chatWindow.appendChild(messageDiv);
-        scrollToBottom();
-
-        // Format text: convert line breaks to <br> and bullet points to <ul><li>
-        function formatBotText(str) {
-            // Bullet points
-            if (str.includes('\n- ')) {
-                const lines = str.split(/\n/);
-                let html = '';
-                let inList = false;
-                for (let line of lines) {
-                    if (line.startsWith('- ')) {
-                        if (!inList) { html += '<ul>'; inList = true; }
-                        html += '<li>' + line.slice(2) + '</li>';
-                    } else {
-                        if (inList) { html += '</ul>'; inList = false; }
-                        html += line + '<br>';
-                    }
-                }
-                if (inList) html += '</ul>';
-                return html;
-            }
-            // Otherwise, just line breaks
-            return str.replace(/\n/g, '<br>');
-        }
-
-        const words = text.split(' ');
-        let current = '';
-        for (let i = 0; i < words.length; i++) {
-            current += (i > 0 ? ' ' : '') + words[i];
-            paragraph.innerHTML = formatBotText(current);
+    function maybeScrollToBottom() {
+        if (shouldStickToBottom) {
             scrollToBottom();
-            await new Promise(res => setTimeout(res, 50));
         }
     }
 
-    // Function to handle sending a message
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+    }
+
+    function stripMarkdownForPreview(text) {
+        return text
+            .replace(/```[\s\S]*?```/g, (match) => match.replace(/```/g, "").trim())
+            .replace(/^#{1,6}\s+/gm, "")
+            .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, "$1")
+            .replace(/\*\*([^*]+)\*\*/g, "$1")
+            .replace(/\*([^*]+)\*/g, "$1")
+            .replace(/`([^`]+)`/g, "$1")
+            .replace(/^>\s?/gm, "")
+            .replace(/^\d+\.\s+/gm, "")
+            .replace(/^[-*]\s+/gm, "")
+            .replace(/\r\n/g, "\n");
+    }
+
+    function renderPreviewText(text) {
+        const safe = escapeHtml(text);
+        return safe
+            .split("\n\n")
+            .map((block) => `<p>${block.replace(/\n/g, "<br>")}</p>`)
+            .join("");
+    }
+
+    function renderMarkdown(text) {
+        if (window.marked && typeof window.marked.parse === "function") {
+            return window.marked.parse(text, {
+                gfm: true,
+                breaks: true,
+            });
+        }
+        return renderPreviewText(text);
+    }
+
+    function createMessage(role, content, metaText) {
+        const wrapper = document.createElement("div");
+        wrapper.className = `message ${role === "user" ? "user-message" : "assistant-message"}`;
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+        meta.textContent = metaText;
+
+        const bubble = document.createElement("div");
+        bubble.className = `message-bubble ${role === "user" ? "message-bubble-user" : "message-bubble-assistant"}`;
+
+        const body = document.createElement("div");
+        body.className = role === "user" ? "message-plain" : "message-markdown";
+
+        if (role === "user") {
+            const p = document.createElement("p");
+            p.textContent = content;
+            body.appendChild(p);
+        } else {
+            body.innerHTML = renderMarkdown(content);
+        }
+
+        bubble.appendChild(body);
+        wrapper.appendChild(meta);
+        wrapper.appendChild(bubble);
+        return wrapper;
+    }
+
+    function showTypingIndicator() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message assistant-message";
+        wrapper.id = "typing-indicator";
+
+        const meta = document.createElement("div");
+        meta.className = "message-meta";
+        meta.textContent = "Node_Response_Beta // Calculating";
+
+        const row = document.createElement("div");
+        row.className = "typing-row";
+
+        const label = document.createElement("div");
+        label.className = "typing-label";
+        label.textContent = "Thinking";
+
+        const dots = document.createElement("div");
+        dots.className = "typing-dots";
+        dots.innerHTML = "<span></span><span></span><span></span>";
+
+        row.appendChild(label);
+        row.appendChild(dots);
+        wrapper.appendChild(meta);
+        wrapper.appendChild(row);
+        chatWindow.appendChild(wrapper);
+        scrollToBottom();
+    }
+
+    function hideTypingIndicator() {
+        const indicator = document.getElementById("typing-indicator");
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    async function typeAssistantMessage(text) {
+        const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const wrapper = createMessage("assistant", "", `Node_Response_Beta // ${timestamp}`);
+        const body = wrapper.querySelector(".message-markdown");
+        chatWindow.appendChild(wrapper);
+        maybeScrollToBottom();
+
+        if (document.hidden) {
+            body.innerHTML = renderMarkdown(text);
+            scrollToBottom();
+            return;
+        }
+
+        const previewText = stripMarkdownForPreview(text);
+        const characters = Array.from(previewText);
+        let current = "";
+        for (let index = 0; index < characters.length; index += 1) {
+            current += characters[index];
+            body.innerHTML = renderPreviewText(current);
+            maybeScrollToBottom();
+            await new Promise((resolve) => setTimeout(resolve, 8));
+        }
+
+        body.innerHTML = renderMarkdown(text);
+        maybeScrollToBottom();
+    }
+
+    function addUserMessage(text) {
+        const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        chatWindow.appendChild(createMessage("user", text, `User_Origin // ${timestamp}`));
+        scrollToBottom();
+    }
+
+    function autoResize() {
+        messageInput.style.height = "auto";
+        messageInput.style.height = `${Math.min(messageInput.scrollHeight, 160)}px`;
+        messageInput.style.overflowY = messageInput.scrollHeight > 160 ? "auto" : "hidden";
+        syncComposerOffset();
+        maybeScrollToBottom();
+    }
+
     async function handleSendMessage() {
         const messageText = messageInput.value.trim();
-        if (messageText !== "") {
-            addMessage('user', messageText, userAvatar);
-            messageInput.value = "";
-            messageInput.style.height = 'auto'; // Reset height after sending
-            messageInput.focus();
-            showTypingIndicator();
-            try {
-                console.log('Sending to backend:', messageText); // Debug log
-                const response = await fetch('/callbot/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken(),
-                    },
-                    body: JSON.stringify({ userMessage: messageText })
-                });
-                const data = await response.json();
-                console.log('Received from backend:', data); // Debug log
-                hideTypingIndicator();
-                await addBotMessageTyping(data.botText, botAvatar);
-            } catch (error) {
-                console.error('Error in fetch:', error); // Debug log
-                hideTypingIndicator();
-                addMessage('bot', 'Sorry, there was an error. Please try again.', botAvatar);
+        if (!messageText) {
+            return;
+        }
+
+        addUserMessage(messageText);
+        messageInput.value = "";
+        autoResize();
+        messageInput.focus();
+        sendButton.disabled = true;
+        showTypingIndicator();
+
+        try {
+            const response = await fetch("/callbot/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userMessage: messageText }),
+            });
+
+            const data = await response.json();
+            hideTypingIndicator();
+            await typeAssistantMessage(data.botText || "I could not find a response.");
+        } catch (_error) {
+            hideTypingIndicator();
+            chatWindow.appendChild(
+                createMessage(
+                    "assistant",
+                    "Sorry, there was an error while contacting the backend. Please try again.",
+                    "Node_Response_Beta // Error"
+                )
+            );
+            scrollToBottom();
+        } finally {
+            sendButton.disabled = false;
+            if (!document.hidden) {
+                messageInput.focus();
             }
         }
     }
 
-    // Helper to get CSRF token for Django
-    function getCSRFToken() {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, 10) === ('csrftoken=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(10));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
+    sendButton.addEventListener("click", handleSendMessage);
+
+    messageInput.addEventListener("input", autoResize);
+    if (chatStage) {
+        chatStage.addEventListener("scroll", handleChatScroll);
     }
 
-    // Event listeners
-    sendButton.addEventListener('click', handleSendMessage);
+    if (typeof ResizeObserver !== "undefined" && composerWrap) {
+        const resizeObserver = new ResizeObserver(() => {
+            syncComposerOffset();
+            maybeScrollToBottom();
+        });
+        resizeObserver.observe(composerWrap);
+    }
 
-    messageInput.addEventListener('keypress', (event) => {
-        // Send message on Enter key, but allow Shift+Enter for newline
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Prevents adding a newline in the textarea
+    messageInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
             handleSendMessage();
         }
     });
+
+    syncComposerOffset();
+    autoResize();
+    scrollToBottom();
 });

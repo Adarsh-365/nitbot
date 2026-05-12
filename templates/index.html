@@ -3,34 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chatbot UI</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <title>NITW AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="chat-outer">
-        <div class="chat-logo">
-            <img src="{% static 'data/bot.png' %}" alt="Bot Logo" class="logo-img">
-            <h1 class="logo-title">Nit Warangal Chatbot</h1>
-        </div>
-        <div class="chat-container">
-            <div class="chat-window" id="chat-window">
-                <!-- Messages will appear here -->
-                <div class="message bot-message">
-                    <img src="{% static 'data/bot.png' %}" alt="Bot Avatar" class="avatar">
-                    <div class="message-content">
-                        <p>Hello! How can I help you today?</p>
+    <div class="app-shell">
+        <main class="main-panel">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-copy">
+                        <div class="topbar-title-row">
+                            <h1 class="topbar-title">NITW_ASSISTANT</h1>
+                            <span class="model-pill">PROFESSOR_INDEX</span>
+                        </div>
+                        <p class="topbar-status">Status: <span>Operational</span> // Retrieval: FAISS // Source: `dataset_updated.json`</p>
                     </div>
                 </div>
-            </div>
-            <div class="chat-input-area">
-                <textarea id="message-input" placeholder="What do you want to know?" rows="1"></textarea>
-                <button id="send-button" aria-label="Send message">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
-            </div>
-        </div>
+            </header>
+
+            <section class="chat-stage">
+                <div class="chat-inner">
+                    <div class="message-list" id="chat-window">
+                        <div class="message assistant-message">
+                            <div class="message-meta">Node_Response_Beta // Ready</div>
+                            <div class="message-bubble message-bubble-assistant">
+                                <div class="message-markdown">
+                                    <p>Hello! Ask about NIT Warangal professor details and I'll answer from the FAISS index.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="chat-anchor" class="chat-anchor"></div>
+                </div>
+            </section>
+
+            <footer class="composer-wrap">
+                <div class="composer">
+                    <textarea id="message-input" rows="1" placeholder="Enter professor query..." aria-label="Message input"></textarea>
+                    <button id="send-button" type="button">Query</button>
+                </div>
+            </footer>
+            <div id="composer-spacer" class="composer-spacer" aria-hidden="true"></div>
+
+            <div class="background-word">TERMINAL</div>
+        </main>
     </div>
-    <script src="{% static 'script.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
